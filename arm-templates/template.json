@@ -1,0 +1,77 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "svr_name": {
+            "defaultValue": "svr-sql-crs-ralm-eu",
+            "type": "String"
+        },
+        "db_name": {
+            "defaultValue": "db-sql-ralm",
+            "type": "String"
+        },
+        "location": {
+            "defaultValue": "eastus",
+            "type": "String"
+        },
+        "sql_password": {
+            "type": "securestring"
+        }
+    },
+    "variables": {},
+    "resources": [
+        {
+            "type": "Microsoft.Sql/servers",
+            "apiVersion": "2015-05-01-preview",
+            "name": "[parameters('svr_name')]",
+            "location": "[parameters('location')]",
+            "tags": {
+                "context": "demo"
+            },
+            "kind": "v12.0",
+            "properties": {
+                "administratorLogin": "admin_sql",
+                "administratorLoginPassword": "[parameters('sql_password')]",
+                "version": "12.0"
+            }
+        },
+        {
+            "type": "Microsoft.Sql/servers/databases",
+            "apiVersion": "2017-10-01-preview",
+            "name": "[concat(parameters('svr_name'), '/', parameters('db_name'))]",
+            "location": "[parameters('location')]",
+            "dependsOn": [
+                "[resourceId('Microsoft.Sql/servers', parameters('svr_name'))]"
+            ],
+            "tags": {
+                "context": "demo"
+            },
+            "sku": {
+                "name": "Basic",
+                "tier": "Basic",
+                "capacity": 5
+            },
+            "kind": "v12.0,user",
+            "properties": {
+                "collation": "SQL_Latin1_General_CP1_CI_AS",
+                "maxSizeBytes": 2147483648,
+                "catalogCollation": "SQL_Latin1_General_CP1_CI_AS",
+                "zoneRedundant": false,
+                "readScale": "Disabled",
+                "readReplicaCount": 0
+            }
+        },
+        {
+            "type": "Microsoft.Sql/servers/firewallRules",
+            "apiVersion": "2015-05-01-preview",
+            "name": "[concat(parameters('svr_name'), '/demo_ip')]",
+            "dependsOn": [
+                "[resourceId('Microsoft.Sql/servers', parameters('svr_name'))]"
+            ],
+            "properties": {
+                "startIpAddress": "190.14.142.183",
+                "endIpAddress": "190.14.142.183"
+            }
+        }
+    ]
+}
